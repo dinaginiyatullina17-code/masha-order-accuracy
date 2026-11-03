@@ -57,7 +57,7 @@
   }
   function renderFeedback(q,answer){
     const correct=q.choices.find(c=>c.correct);
-    document.getElementById('response').innerHTML=`<section class="feedback ${answer.correct?'':'bad'}" id="feedback" tabindex="-1" aria-label="Разбор решения"><h3>${answer.correct?'✓ Правильный ответ!':'Есть что скорректировать'}</h3>${paras(answer.feedback.filter((p,i)=>i!==0 || !/^(Неверно|Правильный ответ)/i.test(p)))}${!answer.correct?`<details open><summary>Правильное действие и разбор</summary><div>${paras(correct.feedback.filter((p,i)=>i!==0 || !/^Правильный ответ/i.test(p)))}</div></details>`:''}</section>`;
+    document.getElementById('response').innerHTML=`<section class="feedback ${answer.correct?'':'bad'}" id="feedback" tabindex="-1" aria-label="Разбор решения"><div class="feedback-layout"><div class="feedback-copy"><h3>${answer.correct?'Правильный ответ!':'Неверно.'}</h3>${paras(answer.feedback.filter((p,i)=>i!==0 || !/^(Неверно|Правильный ответ)/i.test(p)))}</div><figure class="feedback-character"><img src="${escape(answer.character)}" alt="${answer.correct?'Маша радуется верному решению':'Маша обдумывает неверное решение'}"></figure></div>${!answer.correct?`<details open><summary>Правильное действие и разбор</summary><div>${paras(correct.feedback.filter((p,i)=>i!==0 || !/^Правильный ответ/i.test(p)))}</div></details>`:''}</section>`;
   }
   function result(){
     const score=correctCount();
