@@ -108,7 +108,6 @@
   }
   function resetPrompt(){document.getElementById('resetDialog').showModal();}
   document.getElementById('home').onclick=e=>{e.preventDefault();home();top();focusHeading();};
-  document.getElementById('guide').onclick=()=>{document.getElementById('guideContent').innerHTML=instruction;document.getElementById('guideDialog').showModal();};
   document.querySelectorAll('dialog .close').forEach(b=>b.onclick=()=>b.closest('dialog').close());
   document.querySelectorAll('dialog').forEach(d=>d.onclick=e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});
   document.getElementById('cancelReset').onclick=()=>document.getElementById('resetDialog').close();
