@@ -16,7 +16,17 @@
   } catch { storageAvailable = false; }
   let selected = null;
   const escape = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const paras = lines => lines.map(p => `<p>${escape(p)}</p>`).join('');
+  const paras = lines => {
+    let html = '', list = false;
+    for (const line of lines) {
+      if (list) html += `<li>${escape(line.replace(/[,;]$/, ''))}</li>`;
+      else {
+        html += `<p>${escape(line)}</p>`;
+        if (/(?:рекомендаци|Как не допустить).*:$/i.test(line)) {html += '<ul class="recommendations">';list=true;}
+      }
+    }
+    return html + (list ? '</ul>' : '');
+  };
   const answerFor = q => q.choices.find(c => c.id === state.answers[q.id]);
   const completed = () => Object.keys(state.answers).length;
   const correctCount = () => questions.filter(q => answerFor(q)?.correct).length;
@@ -24,11 +34,10 @@
   function top() { window.scrollTo({ top: 0, behavior: 'instant' }); }
   function focusHeading() { const heading = app.querySelector('h1,h2'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } }
   const instruction = `<h3>Инструкция</h3><p>Когда сотрудники готовят и собирают заказ, твоя задача, как управляющего сменой — контролировать этот процесс и его исполнение.</p><p>Внимательно изучи предложенные ситуации, выбери одно из предложенных действий и изучи пояснение — в нём разбор причин и правильный алгоритм действий на будущее.</p><p><b>Твоя задача — оценить корректность и аккуратность сборки.</b></p>`;
-  const impact = 'Твои действия влияют на точность сборки заказов и на то, повторяется ли одна и та же ошибка.';
   function home() {
     const hasProgress = completed() > 0;
     const situations = new Set(questions.map(q => q.title.match(/\d+/)[0])).size;
-    app.innerHTML = `<section class="hero"><div><span class="eyebrow">ПРАКТИКА ДЛЯ УПРАВЛЯЮЩЕГО СМЕНОЙ</span><h1>Точность сборки.<br><em>Всё начинается<br>с твоих решений.</em></h1><p class="lead">Замечай ошибки вовремя, помогай команде и сохраняй доверие Гостей.</p><div class="meta"><span><strong>${situations}</strong>ситуаций</span><span><strong>15</strong>минут</span></div></div><div class="hero-art"><img src="assets/masha.png" alt="Маша — проводник по тренажёру"><div class="art-tag"><strong>Точность — твоя зона ответственности</strong>${impact}</div></div></section><section class="intro-bottom"><div><h3>Для кого этот тренажёр</h3><p>Для тех, кто только стал управляющим сменой, а также для тех, кто хочет освежить знания и проверить себя в нестандартных ситуациях.</p></div><div><h3>Ты научишься</h3><p>Не просто проверять сборку заказов, а управлять корректностью сборки на каждом этапе. Это поможет тебе предотвращать ошибки до того, как Гость столкнётся с негативным опытом посещения ресторана.</p></div></section><section class="intro-instruction" aria-label="Инструкция к тренажёру">${instruction}</section><div class="start-area"><button class="primary" id="start">${state.finished ? 'Посмотреть результат' : hasProgress ? 'Продолжить тренажёр' : 'Начать тренажёр'} <span aria-hidden="true">→</span></button>${hasProgress ? '<button class="quiet" id="restart">Начать заново</button>' : ''}${hasProgress ? `<p class="save-status">Сохранено ответов: ${completed()} из ${questions.length}</p>` : ''}</div>`;
+    app.innerHTML = `<section class="hero"><div><span class="eyebrow">ПРАКТИКА ДЛЯ УПРАВЛЯЮЩЕГО СМЕНОЙ</span><h1>Точность сборки.<br><em>Всё начинается<br>с твоих решений.</em></h1><p class="lead">Замечай ошибки вовремя, помогай команде и сохраняй доверие Гостей.</p><div class="meta"><span><strong>${situations}</strong>ситуаций</span><span><strong>15</strong>минут</span></div></div><div class="hero-art"><img src="assets/masha.png" alt="Маша — проводник по тренажёру"></div></section><section class="intro-bottom"><div><h3>Для кого этот тренажёр</h3><p>Для тех, кто только стал управляющим сменой, а также для тех, кто хочет освежить знания и проверить себя в нестандартных ситуациях.</p></div><div><h3>Ты научишься</h3><p>Не просто проверять сборку заказов, а управлять корректностью сборки на каждом этапе. Это поможет тебе предотвращать ошибки до того, как Гость столкнётся с негативным опытом посещения ресторана.</p></div></section><section class="intro-instruction" aria-label="Инструкция к тренажёру">${instruction}</section><div class="start-area"><button class="primary" id="start">${state.finished ? 'Посмотреть результат' : hasProgress ? 'Продолжить тренажёр' : 'Начать тренажёр'} <span aria-hidden="true">→</span></button>${hasProgress ? '<button class="quiet" id="restart">Начать заново</button>' : ''}${hasProgress ? `<p class="save-status">Сохранено ответов: ${completed()} из ${questions.length}</p>` : ''}</div>`;
     document.getElementById('start').onclick = () => { state.started = true; save(); if (state.finished) result(); else task(); top(); focusHeading(); };
     document.getElementById('restart')?.addEventListener('click', resetPrompt);
   }
@@ -40,11 +49,11 @@
       const image = frame.querySelector('img');
       const update = () => {
         const rotation = Number(frame.dataset.rotation);
-        const ratio = rotation ? image.naturalHeight / image.naturalWidth : image.naturalWidth / image.naturalHeight;
+        const ratio = Math.abs(rotation) % 180 === 90 ? image.naturalHeight / image.naturalWidth : image.naturalWidth / image.naturalHeight;
         if (!Number.isFinite(ratio) || ratio <= 0) return;
         frame.style.setProperty('--photo-aspect', ratio);
         if(rotation) {
-          image.style.width = (100 / ratio) + '%';
+          image.style.width = (Math.abs(rotation) % 180 === 90 ? 100 / ratio : 100) + '%';
           image.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
         }
       };
@@ -89,7 +98,7 @@
   }
   function result(){
     const score=correctCount();
-    app.innerHTML=`<section class="result"><div class="result-top"><div><span class="eyebrow">ПРАКТИКА ЗАВЕРШЕНА</span><h1>Поздравляю<br>с прохождением задания!</h1><p>Точность сборки — зона ответственности управляющего. ${impact}</p><div class="score"><div><strong>${score} / ${questions.length}</strong><span>верных решений</span></div><div><strong>${Math.round(score/questions.length*100)}%</strong><span>результат</span></div></div><p><b>Принимай решения, а не констатируй ошибки.</b></p></div><div class="result-art"><img src="assets/masha.png" alt="Маша поздравляет с завершением тренажёра"></div></div><div class="actions"><button class="primary" id="reviewMistakes">${score<questions.length?'Разобрать ошибки':'Повторить разборы'} →</button><button class="secondary" id="restart">Пройти ещё раз ↺</button></div><div class="review" id="review"><h2>Твои решения</h2>${questions.map((q,i)=>{const a=answerFor(q), c=q.choices.find(c=>c.correct);return `<details data-review="${i}"><summary>${escape(q.title)}<span class="status">${a?.correct?'✓ Верно':'· Ошибка'}</span></summary><div class="review-body">${paras(q.body)}<p><b>Твоё действие:</b> ${escape(a?.text||'Ответ не дан')}</p>${a&&!a.correct?paras(a.feedback):''}<p><b>Правильное действие:</b> ${escape(c.text)}</p>${paras(c.feedback)}</div></details>`;}).join('')}</div><div class="finish-area"><button class="primary finish-button" id="finish">Завершить тренажёр</button></div></section>`;
+    app.innerHTML=`<section class="result"><div class="result-top"><div><span class="eyebrow">ПРАКТИКА ЗАВЕРШЕНА</span><h1>Поздравляю<br>с прохождением задания!</h1><div class="score"><div><strong>${score} / ${questions.length}</strong><span>верных решений</span></div><div><strong>${Math.round(score/questions.length*100)}%</strong><span>результат</span></div></div><p><b>Принимай решения, а не констатируй ошибки.</b></p></div><div class="result-art"><img src="assets/masha.png" alt="Маша поздравляет с завершением тренажёра"></div></div><div class="actions"><button class="primary" id="reviewMistakes">${score<questions.length?'Разобрать ошибки':'Повторить разборы'} →</button><button class="secondary" id="restart">Пройти ещё раз ↺</button></div><div class="review" id="review"><h2>Твои решения</h2>${questions.map((q,i)=>{const a=answerFor(q), c=q.choices.find(c=>c.correct);return `<details data-review="${i}"><summary>${escape(q.title)}<span class="status">${a?.correct?'✓ Верно':'· Ошибка'}</span></summary><div class="review-body">${paras(q.body)}<p><b>Твоё действие:</b> ${escape(a?.text||'Ответ не дан')}</p>${a&&!a.correct?paras(a.feedback):''}<p><b>Правильное действие:</b> ${escape(c.text)}</p>${paras(c.feedback)}</div></details>`;}).join('')}</div><div class="finish-area"><button class="primary finish-button" id="finish">Завершить тренажёр</button></div></section>`;
     document.getElementById('restart').onclick=resetPrompt;
     document.getElementById('finish').onclick=()=>{home();top();focusHeading();};
     document.getElementById('reviewMistakes').onclick=()=>{

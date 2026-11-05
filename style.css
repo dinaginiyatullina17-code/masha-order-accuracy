@@ -12,3 +12,6 @@ body{font-synthesis:none}button,input,select,textarea{font-family:inherit}h1,h2{
 @media(max-width:1000px){.scenario{grid-template-columns:1fr}.pictures{max-width:620px}.photo,.pictures.multiple .photo{max-width:none}.hero-art{min-height:490px}.hero-art img{height:490px}}
 @media(max-width:700px){.hero-art{min-height:360px}.hero-art img{height:420px}.intro-instruction{padding:20px;font-size:14px}.start-area{padding:24px 6% 36px}.start-area .primary,.finish-button{width:100%;min-width:0}.finish-button{font-size:16px}.photo .photo-frame img{max-height:none}.scenario.no-image{grid-template-columns:1fr}}
 .photo>span.photo-frame{position:relative;display:block;margin:0}
+.start-area .primary{min-width:420px;min-height:78px;font-size:22px;padding:22px 44px;border-radius:14px}.recommendations{margin:12px 0 0;padding-left:24px;list-style:disc}.recommendations li{padding-left:5px;margin:0 0 12px;line-height:1.7}.recommendations li:last-child{margin-bottom:0}
+@media(max-width:700px){.start-area .primary{width:100%;min-width:0;min-height:72px;font-size:20px;padding:20px 24px}}
+.pictures.multiple{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pictures.multiple .photo{width:100%;max-width:none}
