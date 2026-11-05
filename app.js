@@ -2,6 +2,12 @@
   'use strict';
   const questions = window.TRAINER_CONTENT.questions;
   const KEY = 'masha-accuracy-v1';
+  const launchUrl = new URL(window.location.href);
+  if (launchUrl.searchParams.get('reset') === '1') {
+    try { localStorage.removeItem(KEY); } catch {}
+    launchUrl.searchParams.delete('reset');
+    history.replaceState(null, '', launchUrl.pathname + launchUrl.search + launchUrl.hash);
+  }
   const app = document.getElementById('app');
   let state = { answers: {}, current: 0, started: false, finished: false, revision: 'expert-2026-11-05' };
   let storageAvailable = true;
